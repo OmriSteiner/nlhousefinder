@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.95"
+geo = "0.29.3"
+itertools = "0.14.0"
+reqwest = "0.12.12"
+scraper = "0.22.0"
