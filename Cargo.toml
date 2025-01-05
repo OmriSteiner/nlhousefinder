@@ -10,3 +10,6 @@ itertools = "0.14.0"
 reqwest = "0.12.12"
 scraper = "0.22.0"
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }
+teloxide = { version = "0.13.0", features = ["macros"] }
+tokio = { version = "1.42.0", features = ["full"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
