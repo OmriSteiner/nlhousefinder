@@ -1,6 +1,8 @@
 mod persistence;
 mod scraping;
 
+use std::sync::Arc;
+
 use persistence::Persistence;
 use teloxide::{
     dispatching::{HandlerExt, UpdateFilterExt},
@@ -22,17 +24,12 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let bot = Bot::from_env();
-    let state = BotContext::new().await?;
+    let state = Arc::new(BotContext::new().await?);
 
-    let handler = Update::filter_message()
-        .filter_command::<Command>()
-        .endpoint(handle_command);
+    let message_handling_task = tokio::spawn(state.message_task(bot));
+    message_handling_task.await?;
 
-    Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![state])
-        .build()
-        .dispatch()
-        .await;
+
 
     Ok(())
 }
@@ -47,6 +44,18 @@ impl BotContext {
         Ok(Self {
             persistence: Persistence::new().await?,
         })
+    }
+
+    async fn message_task(self: Arc<Self>, bot: Bot) {
+        let handler = Update::filter_message()
+            .filter_command::<Command>()
+            .endpoint(handle_command);
+
+        Dispatcher::builder(bot, handler)
+            .dependencies(dptree::deps![self.clone()])
+            .build()
+            .dispatch()
+            .await;
     }
 
     async fn handle_message_inner(
@@ -92,7 +101,7 @@ async fn handle_command(
     bot: Bot,
     msg: Message,
     cmd: Command,
-    state: BotContext,
+    state: Arc<BotContext>,
 ) -> ResponseResult<()> {
     state.handle_message(bot, msg, cmd).await
 }
@@ -108,4 +117,3 @@ impl From<teloxide::RequestError> for BotError {
         Self::Telegram(err)
     }
 }
-
