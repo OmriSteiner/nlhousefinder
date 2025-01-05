@@ -1,8 +1,11 @@
+mod location;
 mod persistence;
 mod scraping;
 
 use std::sync::Arc;
 
+use geo::Contains;
+use location::DESIRED_LOCATION;
 use persistence::Persistence;
 use scraping::{pararius::ParariusScraper, WebsiteScraper};
 use teloxide::{
@@ -106,23 +109,49 @@ impl BotContext {
             return Ok(());
         }
 
-        for property in new_properties {
+        // Notify subscribers if there are relevant properties
+        for property in new_properties.iter() {
+            if property.price >= 1650 {
+                continue;
+            }
+
+            // Sleep for a bit to avoid rate limiting
+            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+            let full_property = pararius_scraper.scrape_property(property.clone()).await?;
+
+            if !DESIRED_LOCATION.contains(&full_property.location) {
+                continue;
+            }
+
             for subscriber in subscribers.iter() {
+                let chat_id = ChatId(*subscriber);
                 if let Err(error) = self
                     .bot
-                    .send_message(
-                        ChatId(*subscriber),
-                        format!("New property: {}", property.url),
+                    .send_message(chat_id, format!("New property: {}", property.url))
+                    .await
+                {
+                    tracing::error!("Failed to send subscriber notification: {:?}", error);
+                }
+
+                if let Err(error) = self
+                    .bot
+                    .send_location(
+                        chat_id,
+                        full_property.location.y(),
+                        full_property.location.x(),
                     )
                     .await
                 {
                     tracing::error!("Failed to send subscriber notification: {:?}", error);
                 }
             }
-
-            self.persistence.save_property(&property.url).await?;
-
         }
+
+        // Save new properties to DB
+        for property in new_properties.iter() {
+            self.persistence.save_property(&property.url).await?;
+        }
+
         Ok(())
     }
 

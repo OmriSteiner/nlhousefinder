@@ -12,15 +12,15 @@ pub(super) trait WebsiteScraper {
     ) -> anyhow::Result<FullScrapeResult>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(super) struct PartialScrapeResult {
     title: String,
-    price: usize,
+    pub(super) price: usize,
     pub(super) url: String,
 }
 
 #[derive(Debug)]
 pub(super) struct FullScrapeResult {
     partial: PartialScrapeResult,
-    location: geo::Point<f64>,
+    pub(super) location: geo::Point<f64>,
 }
