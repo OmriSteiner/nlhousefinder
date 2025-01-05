@@ -34,4 +34,20 @@ impl Persistence {
             .context("failed to list properties")?;
         Ok(result.iter().map(|row| row.url.clone()).collect())
     }
+
+    pub(super) async fn add_subscriber(&self, chat_id: i64) -> anyhow::Result<()> {
+        sqlx::query!("INSERT INTO subscribers (chat_id) VALUES (?)", chat_id)
+            .execute(&self.pool)
+            .await
+            .context("failed to add subscriber")?;
+        Ok(())
+    }
+
+    pub(super) async fn list_subscribers(&self) -> anyhow::Result<Vec<i64>> {
+        let result = sqlx::query!("SELECT chat_id FROM subscribers")
+            .fetch_all(&self.pool)
+            .await
+            .context("failed to list subscribers")?;
+        Ok(result.iter().map(|row| row.chat_id).collect())
+    }
 }
