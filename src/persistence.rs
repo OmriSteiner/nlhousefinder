@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use anyhow::Context;
 use sqlx::sqlite::SqlitePool;
 
+#[derive(Clone)]
 pub(super) struct Persistence {
     pool: SqlitePool,
 }
