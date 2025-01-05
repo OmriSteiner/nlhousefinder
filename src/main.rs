@@ -4,6 +4,7 @@ mod scraping;
 use std::sync::Arc;
 
 use persistence::Persistence;
+use scraping::{pararius::ParariusScraper, WebsiteScraper};
 use teloxide::{
     dispatching::{HandlerExt, UpdateFilterExt},
     prelude::*,
@@ -24,12 +25,20 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let bot = Bot::from_env();
-    let state = Arc::new(BotContext::new().await?);
+    let state = Arc::new(BotContext::new(bot).await?);
 
-    let message_handling_task = tokio::spawn(state.message_task(bot));
-    message_handling_task.await?;
+    let message_handling_task = tokio::spawn(state.clone().message_task());
+    let scraper_task = tokio::spawn(state.scraper_task());
+    let (message_handling_result, scraper_result) =
+        tokio::join!(message_handling_task, scraper_task);
 
+    if let Err(e) = message_handling_result {
+        tracing::error!("Message handling task failed: {:?}", e);
+    }
 
+    if let Err(e) = scraper_result {
+        tracing::error!("Scraper task failed: {:?}", e);
+    }
 
     Ok(())
 }
@@ -37,25 +46,84 @@ async fn main() -> anyhow::Result<()> {
 #[derive(Clone)]
 struct BotContext {
     persistence: Persistence,
+    bot: Bot,
 }
 
 impl BotContext {
-    async fn new() -> anyhow::Result<Self> {
+    async fn new(bot: Bot) -> anyhow::Result<Self> {
         Ok(Self {
             persistence: Persistence::new().await?,
+            bot,
         })
     }
 
-    async fn message_task(self: Arc<Self>, bot: Bot) {
+    async fn message_task(self: Arc<Self>) {
         let handler = Update::filter_message()
             .filter_command::<Command>()
             .endpoint(handle_command);
 
-        Dispatcher::builder(bot, handler)
+        Dispatcher::builder(self.bot.clone(), handler)
             .dependencies(dptree::deps![self.clone()])
             .build()
             .dispatch()
             .await;
+
+        tracing::info!("Dispatcher exited");
+    }
+
+    async fn scraper_task(self: Arc<Self>) {
+        loop {
+            tracing::info!("Starting scrape");
+
+            if let Err(e) = self.scrape_once().await {
+                tracing::error!("Scrape failed: {:?}", e);
+            }
+
+            tracing::info!("Sleeping for 5 minutes");
+            tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
+        }
+    }
+
+    async fn scrape_once(&self) -> anyhow::Result<()> {
+        let existing_properties = self.persistence.list_properties().await?;
+
+        let pararius_scraper = ParariusScraper::default();
+        let properties = pararius_scraper.list_properties().await?;
+
+        let new_properties: Vec<_> = properties
+            .into_iter()
+            .filter(|property| !existing_properties.contains(&property.url))
+            .collect();
+
+        tracing::info!("Found {} new properties", new_properties.len());
+
+        if new_properties.is_empty() {
+            return Ok(());
+        }
+
+        let subscribers = self.persistence.list_subscribers().await?;
+        if subscribers.is_empty() {
+            return Ok(());
+        }
+
+        for property in new_properties {
+            for subscriber in subscribers.iter() {
+                if let Err(error) = self
+                    .bot
+                    .send_message(
+                        ChatId(*subscriber),
+                        format!("New property: {}", property.url),
+                    )
+                    .await
+                {
+                    tracing::error!("Failed to send subscriber notification: {:?}", error);
+                }
+            }
+
+            self.persistence.save_property(&property.url).await?;
+
+        }
+        Ok(())
     }
 
     async fn handle_message_inner(
