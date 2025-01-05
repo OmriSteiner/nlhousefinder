@@ -1,6 +1,7 @@
 mod persistence;
 mod scraping;
 
+use persistence::Persistence;
 use teloxide::{
     dispatching::{HandlerExt, UpdateFilterExt},
     prelude::*,
@@ -37,23 +38,53 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[derive(Clone)]
-struct BotContext;
+struct BotContext {
+    persistence: Persistence,
+}
 
 impl BotContext {
     async fn new() -> anyhow::Result<Self> {
-        Ok(Self)
+        Ok(Self {
+            persistence: Persistence::new().await?,
+        })
     }
 
-    async fn handle_message(&self, bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+    async fn handle_message_inner(
+        &self,
+        bot: Bot,
+        msg: Message,
+        cmd: Command,
+    ) -> Result<(), BotError> {
         match cmd {
             Command::Start => {
                 bot.send_message(msg.chat.id, Command::descriptions().to_string())
                     .await?
             }
-            Command::Subscribe => bot.send_message(msg.chat.id, "Subscribed!").await?,
+            Command::Subscribe => {
+                self.persistence
+                    .add_subscriber(msg.chat.id.0)
+                    .await
+                    .map_err(|_| BotError::Internal("failed to subscribe"))?;
+                bot.send_message(msg.chat.id, "Subscribed!").await?
+            }
         };
 
         Ok(())
+    }
+
+    async fn handle_message(&self, bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+        match self
+            .handle_message_inner(bot.clone(), msg.clone(), cmd.clone())
+            .await
+        {
+            Ok(()) => Ok(()),
+            Err(BotError::Telegram(e)) => Err(e),
+            Err(BotError::Internal(err)) => {
+                bot.send_message(msg.chat.id, format!("Error: {:?}", err))
+                    .await?;
+                Ok(())
+            }
+        }
     }
 }
 
@@ -65,3 +96,16 @@ async fn handle_command(
 ) -> ResponseResult<()> {
     state.handle_message(bot, msg, cmd).await
 }
+
+// Quick and dirty error handling for now
+enum BotError {
+    Internal(&'static str),
+    Telegram(teloxide::RequestError),
+}
+
+impl From<teloxide::RequestError> for BotError {
+    fn from(err: teloxide::RequestError) -> Self {
+        Self::Telegram(err)
+    }
+}
+
