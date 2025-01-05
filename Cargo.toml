@@ -9,3 +9,4 @@ geo = "0.29.3"
 itertools = "0.14.0"
 reqwest = "0.12.12"
 scraper = "0.22.0"
+sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }

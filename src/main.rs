@@ -1,3 +1,4 @@
+mod persistence;
 mod scraping;
 
 fn main() {
