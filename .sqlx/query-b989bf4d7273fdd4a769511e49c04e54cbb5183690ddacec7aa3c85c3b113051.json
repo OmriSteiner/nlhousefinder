@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO subscribers (chat_id) VALUES (?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "b989bf4d7273fdd4a769511e49c04e54cbb5183690ddacec7aa3c85c3b113051"
+}

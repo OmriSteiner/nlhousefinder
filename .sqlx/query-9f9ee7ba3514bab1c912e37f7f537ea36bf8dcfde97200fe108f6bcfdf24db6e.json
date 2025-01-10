@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT url FROM properties",
+  "describe": {
+    "columns": [
+      {
+        "name": "url",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9f9ee7ba3514bab1c912e37f7f537ea36bf8dcfde97200fe108f6bcfdf24db6e"
+}
