@@ -4,7 +4,7 @@ use scraper::{Html, Selector};
 
 use super::{FullScrapeResult, PartialScrapeResult, WebsiteScraper};
 
-pub(crate) struct ParariusScraper {
+pub struct ParariusScraper {
     // Unfortunately `scraper` doesn't have a compile-time checked way to define selectors.
     houses_selector: Selector,
     title_selector: Selector,

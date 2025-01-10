@@ -1,6 +1,6 @@
 mod location;
 mod persistence;
-mod scraping;
+pub mod scraping;
 
 use std::sync::Arc;
 
