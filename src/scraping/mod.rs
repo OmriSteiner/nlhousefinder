@@ -15,6 +15,7 @@ pub trait WebsiteScraper {
 
 #[derive(Debug, Clone)]
 pub struct PartialScrapeResult {
+    #[allow(unused)]
     title: String,
     pub(super) price: usize,
     pub(super) url: String,
@@ -22,6 +23,7 @@ pub struct PartialScrapeResult {
 
 #[derive(Debug)]
 pub struct FullScrapeResult {
+    #[allow(unused)]
     partial: PartialScrapeResult,
     pub(super) location: geo::Point<f64>,
 }
