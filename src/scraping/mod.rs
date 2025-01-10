@@ -20,6 +20,7 @@ pub struct PartialScrapeResult {
     title: String,
     pub(super) price: usize,
     pub(super) url: String,
+    pub(super) area: u32,
 }
 
 #[derive(Debug)]

@@ -12,6 +12,7 @@ pub struct ParariusScraper {
     subtitle_selector: Selector,
     map_selector: Selector,
     price_selector: Selector,
+    area_selector: Selector,
 }
 
 impl Default for ParariusScraper {
@@ -25,6 +26,7 @@ impl Default for ParariusScraper {
                 .unwrap(),
             map_selector: Selector::parse("wc-detail-map").unwrap(),
             price_selector: Selector::parse("div.listing-search-item__price").unwrap(),
+            area_selector: Selector::parse(".illustrated-features__item--surface-area").unwrap(),
         }
     }
 }
@@ -70,10 +72,19 @@ impl WebsiteScraper for ParariusScraper {
                     .parse()
                     .with_context(|| format!("invalid price: {raw_price}"))?;
 
+                let area = house.select_one_text(&self.area_selector)?;
+                let area = area
+                    .split(" ")
+                    .next()
+                    .unwrap_or(area)
+                    .parse()
+                    .with_context(|| format!("invalid area: {area}"))?;
+
                 anyhow::Ok(PartialScrapeResult {
                     title: address.to_string(),
                     price,
                     url,
+                    area,
                 })
             })
             .try_collect()?)
