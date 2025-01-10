@@ -107,7 +107,7 @@ impl BotContext {
 
         // Notify subscribers if there are relevant properties
         for property in new_properties.iter() {
-            if property.price >= 1650 {
+            if property.price >= 1650 || property.area < 55 {
                 continue;
             }
 
