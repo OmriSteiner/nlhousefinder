@@ -2,7 +2,7 @@ use anyhow::Context;
 use itertools::Itertools;
 use scraper::{Html, Selector};
 
-use super::{FullScrapeResult, PartialScrapeResult, WebsiteScraper};
+use super::{utils::SelectExt, FullScrapeResult, PartialScrapeResult, WebsiteScraper};
 
 pub struct ParariusScraper {
     // Unfortunately `scraper` doesn't have a compile-time checked way to define selectors.
@@ -44,25 +44,14 @@ impl WebsiteScraper for ParariusScraper {
         Ok(houses
             .into_iter()
             .map(|house| {
-                let title = house
-                    .select(&self.title_selector)
-                    .next()
-                    .context("no title")?;
+                let title = house.select_one(&self.title_selector)?;
                 let raw_address = title.text().next().context("no address")?.trim();
                 let address = raw_address
                     .split_once(" ")
                     .map(|(_, rest)| rest)
                     .unwrap_or(raw_address);
 
-                //let subtitle = house
-                //    .select(&self.subtitle_selector)
-                //    .next()
-                //    .context("no subtitle")?;
-                //let zipcode = subtitle
-                //    .text()
-                //    .next()
-                //    .context("no zipcode")?
-                //    .trim()
+                //let zipcode = house.select_one_text(&self.subtitle_selector)?
                 //    // "1234 AB" -> 7
                 //    .split_at_checked(7)
                 //    .context("invalid zipcode")?
@@ -71,14 +60,7 @@ impl WebsiteScraper for ParariusScraper {
                 let uri = title.attr("href").context("no link")?;
                 let url = format!("https://pararius.com{}", uri);
 
-                let raw_price = house
-                    .select(&self.price_selector)
-                    .next()
-                    .context("no price")?
-                    .text()
-                    .next()
-                    .context("no price text")?
-                    .trim();
+                let raw_price = house.select_one_text(&self.price_selector)?;
                 let price: usize = raw_price
                     .split(" ")
                     .next()
@@ -109,10 +91,7 @@ impl WebsiteScraper for ParariusScraper {
             .await?;
 
         let appartment_document = Html::parse_document(&response);
-        let map = appartment_document
-            .select(&self.map_selector)
-            .next()
-            .context("no map")?;
+        let map = appartment_document.select_one(&self.map_selector)?;
         let longitude: f64 = map
             .attr("data-longitude")
             .context("no longitude")?

@@ -1,4 +1,5 @@
 pub mod pararius;
+mod utils;
 
 #[allow(async_fn_in_trait)]
 pub trait WebsiteScraper {
