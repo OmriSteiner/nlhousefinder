@@ -1,17 +1,18 @@
 pub mod pararius;
 mod utils;
 
-#[allow(async_fn_in_trait)]
+use futures::future::BoxFuture;
+
 pub trait WebsiteScraper {
     /// List the most recent properties on the website.
     /// Return their links.
-    async fn list_properties(&self) -> anyhow::Result<Vec<PartialScrapeResult>>;
+    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<PartialScrapeResult>>>;
 
     /// Scrape a given property
-    async fn scrape_property(
+    fn scrape_property(
         &self,
         partial: PartialScrapeResult,
-    ) -> anyhow::Result<FullScrapeResult>;
+    ) -> BoxFuture<anyhow::Result<FullScrapeResult>>;
 }
 
 #[derive(Debug, Clone)]
