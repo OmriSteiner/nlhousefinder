@@ -1,9 +1,27 @@
 use anyhow::Context;
-use nlhousefinder::scraping::{pararius::ParariusScraper, WebsiteScraper};
+use clap::{Parser, ValueEnum};
+use nlhousefinder::scraping::{huurwoningen::HuurwoningenScraper, pararius::ParariusScraper, WebsiteScraper};
+
+#[derive(Parser)]
+struct Args {
+    website: Website,
+}
+
+#[derive(ValueEnum, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum Website {
+    Pararius,
+    Huurwoningen,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let scraper = ParariusScraper::default();
+    let args = Args::parse();
+
+    let scraper: Box<dyn WebsiteScraper> = match args.website {
+        Website::Pararius => Box::new(ParariusScraper::default()),
+        Website::Huurwoningen => Box::new(HuurwoningenScraper::default()),
+    };
+
     let properties = scraper.list_properties().await?;
     let first_property = properties.first().context("no properties")?;
     let full_property = scraper.scrape_property(first_property.clone()).await?;
