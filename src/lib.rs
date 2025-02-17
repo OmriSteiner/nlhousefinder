@@ -74,7 +74,8 @@ impl BotContext {
         loop {
             tracing::info!("Starting scrape");
 
-            if let Err(e) = self.scrape_once().await {
+            let pararius_scraper = ParariusScraper::default();
+            if let Err(e) = self.scrape_once(pararius_scraper).await {
                 tracing::error!("Scrape failed: {:?}", e);
             }
 
@@ -83,11 +84,10 @@ impl BotContext {
         }
     }
 
-    async fn scrape_once(&self) -> anyhow::Result<()> {
+    async fn scrape_once<T: WebsiteScraper>(&self, scraper: T) -> anyhow::Result<()> {
         let existing_properties = self.persistence.list_properties().await?;
 
-        let pararius_scraper = ParariusScraper::default();
-        let properties = pararius_scraper.list_properties().await?;
+        let properties = scraper.list_properties().await?;
 
         let new_properties: Vec<_> = properties
             .into_iter()
@@ -113,7 +113,7 @@ impl BotContext {
 
             // Sleep for a bit to avoid rate limiting
             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-            let full_property = pararius_scraper.scrape_property(property.clone()).await?;
+            let full_property = scraper.scrape_property(property.clone()).await?;
 
             if !DESIRED_LOCATION.contains(&full_property.location) {
                 continue;
