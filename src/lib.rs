@@ -89,6 +89,7 @@ impl BotContext {
         }
     }
 
+    #[tracing::instrument(skip_all, fields(scraper=std::any::type_name::<T>()))]
     async fn scrape_once<T: WebsiteScraper>(&self, scraper: T) -> anyhow::Result<()> {
         let existing_properties = self.persistence.list_properties().await?;
 
