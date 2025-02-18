@@ -28,13 +28,11 @@ impl Default for HuurwoningenScraper {
 impl WebsiteScraper for HuurwoningenScraper {
     fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<super::PartialScrapeResult>>> {
         Box::pin(async {
-            let response = reqwest::get(
-                "https://www.huurwoningen.nl/in/rotterdam/?sort=published_at&direction=desc",
-            )
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
+            let response = reqwest::get("https://www.huurwoningen.nl/in/rotterdam/")
+                .await?
+                .error_for_status()?
+                .text()
+                .await?;
 
             let document = Html::parse_document(&response);
             let houses = document.select(&self.houses_selector);
