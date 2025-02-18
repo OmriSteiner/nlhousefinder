@@ -65,14 +65,18 @@ impl WebsiteScraper for ParariusScraper {
                     let url = format!("https://pararius.com{}", uri);
 
                     let raw_price = house.select_one_text(&self.price_selector)?;
-                    let price: usize = raw_price
-                        .split(" ")
-                        .next()
-                        .unwrap()
-                        .replace("€", "")
-                        .replace(",", "")
-                        .parse()
-                        .with_context(|| format!("invalid price: {raw_price}"))?;
+                    let price: usize = if raw_price == "Price on request" {
+                        9999
+                    } else {
+                        raw_price
+                            .split(" ")
+                            .next()
+                            .unwrap()
+                            .replace("€", "")
+                            .replace(",", "")
+                            .parse()
+                            .with_context(|| format!("invalid price: {raw_price}"))?
+                    };
 
                     let area = house.select_one_text(&self.area_selector)?;
                     let area = area
