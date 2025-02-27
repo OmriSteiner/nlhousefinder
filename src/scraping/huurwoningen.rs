@@ -44,15 +44,19 @@ impl WebsiteScraper for HuurwoningenScraper {
                         .select_one_text(&self.price_selector)
                         .context("no price")?;
 
-                    let price: usize = price_raw
-                        // It starts with a euro sign and an NBSP,
-                        // so we use split_whitespace to handle that.
-                        .split_whitespace()
-                        .nth(1)
-                        .with_context(|| format!("invalid price {price_raw}"))?
-                        .replace(".", "")
-                        .parse()
-                        .with_context(|| format!("invalid price {price_raw}"))?;
+                    let price: usize = if price_raw == "Prijs op aanvraag" {
+                        9999
+                    } else {
+                        price_raw
+                            // It starts with a euro sign and an NBSP,
+                            // so we use split_whitespace to handle that.
+                            .split_whitespace()
+                            .nth(1)
+                            .with_context(|| format!("invalid price {price_raw}"))?
+                            .replace(".", "")
+                            .parse()
+                            .with_context(|| format!("invalid price {price_raw}"))?
+                    };
 
                     let title = house.select_one(&self.title_selector).context("no title")?;
                     let uri = title.attr("href").context("no href in title")?;
