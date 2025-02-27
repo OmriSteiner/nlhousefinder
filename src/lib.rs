@@ -7,7 +7,10 @@ use std::sync::Arc;
 use geo::Contains;
 use location::DESIRED_LOCATION;
 use persistence::Persistence;
-use scraping::{huurwoningen::HuurwoningenScraper, pararius::ParariusScraper, WebsiteScraper};
+use scraping::{
+    huurwoningen::HuurwoningenScraper, ikwilhuren::IkwilhurenScraper, pararius::ParariusScraper,
+    WebsiteScraper,
+};
 use teloxide::{
     dispatching::{HandlerExt, UpdateFilterExt},
     prelude::*,
@@ -76,12 +79,17 @@ impl BotContext {
 
             let pararius_scraper = ParariusScraper::default();
             if let Err(e) = self.scrape_once(pararius_scraper).await {
-                tracing::error!("Pararius scrape failed: {:?}", e);
+                tracing::error!("Pararius scrape failed: {e:?}");
             }
 
             let huurwoningen_scraper = HuurwoningenScraper::default();
             if let Err(e) = self.scrape_once(huurwoningen_scraper).await {
-                tracing::error!("Huurwoningen.nl scrape failed: {:?}", e);
+                tracing::error!("Huurwoningen.nl scrape failed: {e:?}");
+            }
+
+            let ikwilhuren_scraper = IkwilhurenScraper::default();
+            if let Err(e) = self.scrape_once(ikwilhuren_scraper).await {
+                tracing::error!("ikwilhuren.nu scrape failed: {e:?}");
             }
 
             tracing::info!("Sleeping for 5 minutes");
