@@ -77,23 +77,21 @@ impl BotContext {
         loop {
             tracing::info!("Starting scrape");
 
-            let pararius_scraper = ParariusScraper::default();
-            if let Err(e) = self.scrape_once(pararius_scraper).await {
-                tracing::error!("Pararius scrape failed: {e:?}");
-            }
-
-            let huurwoningen_scraper = HuurwoningenScraper::default();
-            if let Err(e) = self.scrape_once(huurwoningen_scraper).await {
-                tracing::error!("Huurwoningen.nl scrape failed: {e:?}");
-            }
-
-            let ikwilhuren_scraper = IkwilhurenScraper::default();
-            if let Err(e) = self.scrape_once(ikwilhuren_scraper).await {
-                tracing::error!("ikwilhuren.nu scrape failed: {e:?}");
-            }
+            self.scrape_website_infallible::<ParariusScraper>().await;
+            self.scrape_website_infallible::<HuurwoningenScraper>()
+                .await;
+            self.scrape_website_infallible::<IkwilhurenScraper>().await;
 
             tracing::info!("Sleeping for 5 minutes");
             tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
+        }
+    }
+
+    async fn scrape_website_infallible<S: WebsiteScraper + Default>(&self) {
+        let scraper = S::default();
+
+        if let Err(e) = self.scrape_once(scraper).await {
+            tracing::error!("Scrape failed for {}: {e:?}", std::any::type_name::<S>());
         }
     }
 
