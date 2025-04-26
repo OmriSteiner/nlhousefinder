@@ -4,7 +4,9 @@ use itertools::Itertools;
 use reqwest;
 use scraper::{ElementRef, Html, Selector};
 
-use super::{utils::SelectExt, FullScrapeResult, PartialScrapeResult, WebsiteScraper};
+use super::{
+    utils::SelectExt, FullScrapeResult, PartialScrapeResult, ScrapeResult, WebsiteScraper,
+};
 
 pub struct IkwilhurenScraper {
     listing_selector: Selector,
@@ -27,7 +29,7 @@ impl Default for IkwilhurenScraper {
 }
 
 impl WebsiteScraper for IkwilhurenScraper {
-    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<PartialScrapeResult>>> {
+    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<ScrapeResult>>> {
         Box::pin(async {
             let response = reqwest::get("https://ikwilhuren.nu/aanbod/?sort=aanbodDESC")
                 .await?
@@ -77,12 +79,12 @@ impl WebsiteScraper for IkwilhurenScraper {
                         .parse()
                         .with_context(|| format!("invalid area: {area}"))?;
 
-                    anyhow::Ok(PartialScrapeResult {
+                    anyhow::Ok(ScrapeResult::Partial(PartialScrapeResult {
                         title,
                         price,
                         url,
                         area,
-                    })
+                    }))
                 })
                 .try_collect()?;
 

@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
 
     let properties = scraper.list_properties().await?;
     let first_property = properties.first().context("no properties")?;
-    let full_property = scraper.scrape_property(first_property.clone()).await?;
+    let full_property = scraper.full(first_property.clone()).await?;
 
     println!("{full_property:#?}");
 

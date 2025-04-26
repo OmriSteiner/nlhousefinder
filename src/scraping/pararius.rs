@@ -3,7 +3,9 @@ use futures::future::BoxFuture;
 use itertools::Itertools;
 use scraper::{Html, Selector};
 
-use super::{utils::SelectExt, FullScrapeResult, PartialScrapeResult, WebsiteScraper};
+use super::{
+    utils::SelectExt, FullScrapeResult, PartialScrapeResult, ScrapeResult, WebsiteScraper,
+};
 
 pub struct ParariusScraper {
     // Unfortunately `scraper` doesn't have a compile-time checked way to define selectors.
@@ -33,7 +35,7 @@ impl Default for ParariusScraper {
 }
 
 impl WebsiteScraper for ParariusScraper {
-    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<PartialScrapeResult>>> {
+    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<ScrapeResult>>> {
         Box::pin(async {
             // By default querying this URL returns results sorted by newest first
             let response = reqwest::get("https://www.pararius.com/apartments/rotterdam")
@@ -86,12 +88,12 @@ impl WebsiteScraper for ParariusScraper {
                         .parse()
                         .with_context(|| format!("invalid area: {area}"))?;
 
-                    anyhow::Ok(PartialScrapeResult {
+                    anyhow::Ok(ScrapeResult::Partial(PartialScrapeResult {
                         title: address.to_string(),
                         price,
                         url,
                         area,
-                    })
+                    }))
                 })
                 .try_collect()?)
         })

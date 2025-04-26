@@ -3,7 +3,9 @@ use futures::future::BoxFuture;
 use itertools::Itertools;
 use scraper::{Html, Selector};
 
-use super::{utils::SelectExt, FullScrapeResult, PartialScrapeResult, WebsiteScraper};
+use super::{
+    utils::SelectExt, FullScrapeResult, PartialScrapeResult, ScrapeResult, WebsiteScraper,
+};
 
 pub struct RotterdamWonenScraper {
     houses_selector: Selector,
@@ -28,7 +30,7 @@ impl Default for RotterdamWonenScraper {
 }
 
 impl WebsiteScraper for RotterdamWonenScraper {
-    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<PartialScrapeResult>>> {
+    fn list_properties(&self) -> BoxFuture<anyhow::Result<Vec<ScrapeResult>>> {
         Box::pin(async {
             let response = reqwest::get("https://www.rotterdamwonen.nl/aanbod/?sortby=date-desc")
                 .await?
@@ -60,12 +62,12 @@ impl WebsiteScraper for RotterdamWonenScraper {
 
                     let url = house.attr("data-link").context("no URL")?.to_string();
 
-                    anyhow::Ok(PartialScrapeResult {
+                    anyhow::Ok(ScrapeResult::Partial(PartialScrapeResult {
                         title,
                         price,
                         url,
                         area,
-                    })
+                    }))
                 })
                 .try_collect()?)
         })

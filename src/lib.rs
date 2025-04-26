@@ -127,7 +127,7 @@ impl BotContext {
 
             // Sleep for a bit to avoid rate limiting
             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-            let full_property = scraper.scrape_property(property.clone()).await?;
+            let full_property = scraper.full(property.clone()).await?;
 
             if !DESIRED_LOCATION.contains(&full_property.location) {
                 continue;
