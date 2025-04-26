@@ -8,7 +8,7 @@ use geo::Contains;
 use location::DESIRED_LOCATION;
 use persistence::Persistence;
 use scraping::{
-    huurwoningen::HuurwoningenScraper, ikwilhuren::IkwilhurenScraper, pararius::ParariusScraper,
+    huurwoningen::HuurwoningenScraper, pararius::ParariusScraper,
     rotterdamwonen::RotterdamWonenScraper, WebsiteScraper,
 };
 use teloxide::{
@@ -80,7 +80,7 @@ impl BotContext {
             self.scrape_website_infallible::<ParariusScraper>().await;
             self.scrape_website_infallible::<HuurwoningenScraper>()
                 .await;
-            self.scrape_website_infallible::<IkwilhurenScraper>().await;
+            //self.scrape_website_infallible::<IkwilhurenScraper>().await;
             self.scrape_website_infallible::<RotterdamWonenScraper>()
                 .await;
 
