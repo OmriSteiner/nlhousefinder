@@ -2,7 +2,7 @@ use anyhow::Context;
 use clap::{Parser, ValueEnum};
 use nlhousefinder::scraping::{
     huurwoningen::HuurwoningenScraper, ikwilhuren::IkwilhurenScraper, pararius::ParariusScraper,
-    rotterdamwonen::RotterdamWonenScraper, WebsiteScraper,
+    rotterdamwonen::RotterdamWonenScraper, verra::VerraMakelaarsScraper, WebsiteScraper,
 };
 
 #[derive(Parser)]
@@ -16,6 +16,7 @@ enum Website {
     Huurwoningen,
     Ikwilhuren,
     RotterdamWonen,
+    Verra,
 }
 
 #[tokio::main]
@@ -27,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
         Website::Huurwoningen => Box::new(HuurwoningenScraper::default()),
         Website::Ikwilhuren => Box::new(IkwilhurenScraper::default()),
         Website::RotterdamWonen => Box::new(RotterdamWonenScraper::default()),
+        Website::Verra => Box::new(VerraMakelaarsScraper::default()),
     };
 
     let properties = scraper.list_properties().await?;

@@ -2,6 +2,7 @@ pub mod huurwoningen;
 pub mod ikwilhuren;
 pub mod pararius;
 pub mod rotterdamwonen;
+pub mod verra;
 mod utils;
 
 use std::ops::Deref;

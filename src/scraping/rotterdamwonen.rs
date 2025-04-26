@@ -9,8 +9,6 @@ use super::{
 
 pub struct RotterdamWonenScraper {
     houses_selector: Selector,
-    //title_selector: Selector,
-    //price_selector: Selector,
     area_selector: Selector,
 }
 

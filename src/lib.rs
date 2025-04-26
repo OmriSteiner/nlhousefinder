@@ -9,7 +9,7 @@ use location::DESIRED_LOCATION;
 use persistence::Persistence;
 use scraping::{
     huurwoningen::HuurwoningenScraper, pararius::ParariusScraper,
-    rotterdamwonen::RotterdamWonenScraper, WebsiteScraper,
+    rotterdamwonen::RotterdamWonenScraper, verra::VerraMakelaarsScraper, WebsiteScraper,
 };
 use teloxide::{
     dispatching::{HandlerExt, UpdateFilterExt},
@@ -82,6 +82,8 @@ impl BotContext {
                 .await;
             //self.scrape_website_infallible::<IkwilhurenScraper>().await;
             self.scrape_website_infallible::<RotterdamWonenScraper>()
+                .await;
+            self.scrape_website_infallible::<VerraMakelaarsScraper>()
                 .await;
 
             tracing::info!("Sleeping for 5 minutes");
