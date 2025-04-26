@@ -62,11 +62,24 @@ impl WebsiteScraper for RotterdamWonenScraper {
 
                     let url = house.attr("data-link").context("no URL")?.to_string();
 
-                    anyhow::Ok(ScrapeResult::Partial(PartialScrapeResult {
-                        title,
-                        price,
-                        url,
-                        area,
+                    let latitude_raw = house.attr("data-lat").context("no latitude")?;
+                    let longitude_raw = house.attr("data-long").context("no longitude")?;
+
+                    let latitude = latitude_raw
+                        .parse()
+                        .with_context(|| format!("invalid latitude: {latitude_raw}"))?;
+                    let longitude = longitude_raw
+                        .parse()
+                        .with_context(|| format!("invalid longitude: {longitude_raw}"))?;
+
+                    anyhow::Ok(ScrapeResult::Full(FullScrapeResult {
+                        partial: PartialScrapeResult {
+                            title,
+                            price,
+                            url,
+                            area,
+                        },
+                        location: geo::Point::new(longitude, latitude),
                     }))
                 })
                 .try_collect()?)
@@ -75,13 +88,10 @@ impl WebsiteScraper for RotterdamWonenScraper {
 
     fn scrape_property(
         &self,
-        partial: PartialScrapeResult,
+        _partial: PartialScrapeResult,
     ) -> BoxFuture<anyhow::Result<FullScrapeResult>> {
-        Box::pin(async {
-            Ok(FullScrapeResult {
-                partial,
-                location: geo::Point::new(0.0, 0.0), // TODO: Implement this
-            })
-        })
+        Box::pin(futures::future::ready(Err(anyhow::anyhow!(
+            "RotterdamWonen does not support scraping individual properties"
+        ))))
     }
 }
