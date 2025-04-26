@@ -1,6 +1,7 @@
 pub mod huurwoningen;
 pub mod pararius;
 pub mod ikwilhuren;
+pub mod rotterdamwonen;
 mod utils;
 
 use futures::future::BoxFuture;
