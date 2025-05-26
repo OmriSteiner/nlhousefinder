@@ -3,6 +3,7 @@ pub mod ikwilhuren;
 pub mod pararius;
 pub mod rotterdamwonen;
 pub mod verra;
+pub mod vesteda;
 mod utils;
 
 use std::ops::Deref;

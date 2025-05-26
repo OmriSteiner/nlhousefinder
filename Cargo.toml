@@ -9,7 +9,7 @@ clap = { version = "4", features = ["derive"] }
 futures = "0.3.31"
 geo = "0.29.3"
 itertools = "0.14.0"
-reqwest = { version = "0.12.12", features = ["rustls-tls", "json"], default-features = false }
+reqwest = { version = "0.12.12", features = ["rustls-tls", "json", "gzip", "http2"], default-features = false }
 scraper = "0.22.0"
 serde = { version = "1.0.219", features = ["derive"] }
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }
